@@ -14,6 +14,9 @@ func main() {
 		os.Exit(02)
 	}
 
+	fs := http.FileServer(http.Dir("assets"))
+	http.Handle("/assets/", http.StripPrefix("/assets/", fs))
+
 	type InfoEtudiants struct {
 		Nom    string
 		Prenom string
@@ -36,16 +39,16 @@ func main() {
 			Niveau:  "Bachelor 1",
 			Nombre:  10,
 			Etudiants: []InfoEtudiants{
-				{Nom: "Massinissa", Prenom: "AHFIR", Age: 20, Sexe: "M"},
-				{Nom: "Antony", Prenom: "FONTAINE", Age: 19, Sexe: "M"},
-				{Nom: "Jérémie", Prenom: "JULLEMIER", Age: 20, Sexe: "M"},
-				{Nom: "Moussa", Prenom: "KONATE", Age: 20, Sexe: "M"},
-				{Nom: "Moussa", Prenom: "KONATE", Age: 20, Sexe: "M"},
-				{Nom: "Moussa", Prenom: "KONATE", Age: 20, Sexe: "M"},
-				{Nom: "Moussa", Prenom: "KONATE", Age: 20, Sexe: "M"},
-				{Nom: "Moussa", Prenom: "KONATE", Age: 20, Sexe: "M"},
-				{Nom: "Moussa", Prenom: "KONATE", Age: 20, Sexe: "M"},
-				{Nom: "Moussa", Prenom: "KONATE", Age: 20, Sexe: "M"},
+				{Nom: "AHFIR", Prenom: "Massinissa", Age: 20, Sexe: "M"},
+				{Nom: "FONTAINE", Prenom: "Antony", Age: 19, Sexe: "M"},
+				{Nom: "JULLEMIER", Prenom: "Jérémie", Age: 20, Sexe: "M"},
+				{Nom: "CHECKAL", Prenom: "Abdel", Age: 20, Sexe: "M"},
+				{Nom: "Azilis", Prenom: "KONATE", Age: 20, Sexe: "F"},
+				{Nom: "WEHBE", Prenom: "Edwin", Age: 20, Sexe: "M"},
+				{Nom: "BAGNEAU", Prenom: "Emma", Age: 20, Sexe: "F"},
+				{Nom: "BENKIRANE", Prenom: "Yassine", Age: 20, Sexe: "M"},
+				{Nom: "AIT", Prenom: "Rania", Age: 20, Sexe: "F"},
+				{Nom: "VELAZQUEZ", Prenom: "Léo", Age: 20, Sexe: "M"},
 			},
 		}
 		err := temp.ExecuteTemplate(w, "promo", data)

@@ -28,10 +28,16 @@
         <tbody>
             {{range .Etudiants}}
             <tr>
-                <td>{{.Nom}}</td>
                 <td>{{.Prenom}}</td>
+                <td>{{.Nom}}</td>
                 <td>{{.Age}}</td>
-                <td>{{.Sexe}}</td>
+                <td>
+                    {{if eq .Sexe "M"}}
+                    <img class="icon" src="/assets/images/icon-M.png" alt="icon-M">
+                    {{else}}
+                    <img class="icon" src="/assets/images/icon-F.png" alt="icon-F">
+                    {{end}}
+                </td>
             </tr>
             {{end}}
         </tbody>
