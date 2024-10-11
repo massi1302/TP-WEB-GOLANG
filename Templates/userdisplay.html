@@ -53,31 +53,43 @@
 <body>
     <div class="container">
         <h1>Informations Personnelles</h1>
-
+    
         {{if .IsEmpty}}
             <div class="alert alert-info">
-                <p>Aucune information n'est disponible. Veuillez <a href="/user/form">remplir le formulaire</a> pour saisir vos informations personnelles.</p>
+                Aucune information n'est disponible. Veuillez <a href="/user/form">remplir le formulaire</a> pour saisir vos informations personnelles.
             </div>
         {{else}}
             <div class="info-section">
                 <div class="info-group">
-                    <label>Nom:</label>
-                    <span>{{.Nom}}</span>
+                    <strong>Nom:</strong> 
+                    {{if .Nom}}
+                        {{.Nom}}
+                    {{else}}
+                        <span class="text-warning">Non renseigné</span>
+                    {{end}}
                 </div>
-
+    
                 <div class="info-group">
-                    <label>Prénom:</label>
-                    <span>{{.Prenom}}</span>
+                    <strong>Prénom:</strong> 
+                    {{if .Prenom}}
+                        {{.Prenom}}
+                    {{else}}
+                        <span class="text-warning">Non renseigné</span>
+                    {{end}}
                 </div>
-
+    
                 <div class="info-group">
-                    <label>Date de naissance:</label>
-                    <span>{{.DateNaissance}}</span>
+                    <strong>Date de naissance:</strong> 
+                    {{if .DateNaissance}}
+                        {{.DateNaissance}}
+                    {{else}}
+                        <span class="text-warning">Non renseignée</span>
+                    {{end}}
                 </div>
-
+    
                 <div class="info-group">
-                    <label>Sexe:</label>
-                    <span>
+                    <strong>Sexe:</strong> 
+                    {{if .Sexe}}
                         {{if eq .Sexe "M"}}
                             Masculin
                         {{else if eq .Sexe "F"}}
@@ -85,13 +97,19 @@
                         {{else}}
                             Autre
                         {{end}}
-                    </span>
+                    {{else}}
+                        <span class="text-warning">Non renseigné</span>
+                    {{end}}
                 </div>
             </div>
-
-            <a href="/user/form" class="btn-modify">Modifier mes informations</a>
+    
+            {{if or (not .Nom) (not .Prenom) (not .DateNaissance) (not .Sexe)}}
+                <div class="alert alert-info">
+                    Certaines informations sont manquantes. Veuillez <a href="/user/form">compléter le formulaire</a> pour renseigner toutes vos informations personnelles.
+                </div>
+            {{end}}
+    
+            <a href="/user/form" class="btn btn-primary">Modifier mes informations</a>
         {{end}}
     </div>
-</body>
-</html>
-{{end}}
+    {{end}}

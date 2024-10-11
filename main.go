@@ -30,6 +30,7 @@ type Form struct {
 	DateNaissance string
 	Sexe          string
 	Check         bool
+	Errors        map[string]string
 }
 
 type ViewData struct {
@@ -59,6 +60,7 @@ type PageAffiche struct {
 	DateNaissance string
 	Sexe          string
 	IsEmpty       bool
+	Errors        map[string]string
 }
 
 // Variables globales
@@ -144,13 +146,11 @@ func handleUserForm(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleUserTreatment(w http.ResponseWriter, r *http.Request) {
-	// 1. Vérification de la méthode HTTP
 	if r.Method != http.MethodPost {
 		redirectError(w, r, "405", ERR_METHOD_INVALID)
 		return
 	}
 
-	// 2. Récupération des données du formulaire
 	form := Form{
 		Nom:           r.FormValue("nom"),
 		Prenom:        r.FormValue("prenom"),
@@ -158,13 +158,14 @@ func handleUserTreatment(w http.ResponseWriter, r *http.Request) {
 		Sexe:          r.FormValue("sexe"),
 	}
 
-	// 3. Validation des données
+	// Validate the form
 	if err := validateForm(form); err != nil {
+		// If there's an error, redirect to the error page
 		redirectError(w, r, "400", err.Error())
 		return
 	}
 
-	// 4. Si toutes les validations sont passées, on stocke et redirige
+	// If all validations pass, set Check to true and store the form
 	form.Check = true
 	stockageForm = form
 	http.Redirect(w, r, "/user/display", http.StatusSeeOther)
@@ -177,9 +178,7 @@ func handleUserDisplay(w http.ResponseWriter, r *http.Request) {
 		Prenom:        stockageForm.Prenom,
 		DateNaissance: stockageForm.DateNaissance,
 		Sexe:          stockageForm.Sexe,
-		IsEmpty: !stockageForm.Check && stockageForm.Nom == "" &&
-			stockageForm.Prenom == "" && stockageForm.DateNaissance == "" &&
-			stockageForm.Sexe == "",
+		IsEmpty:       isFormEmpty(stockageForm),
 	}
 
 	if err := templates.ExecuteTemplate(w, "userdisplay", data); err != nil {
@@ -187,25 +186,28 @@ func handleUserDisplay(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func isFormEmpty(form Form) bool {
+	return form.Nom == "" && form.Prenom == "" && form.DateNaissance == "" && form.Sexe == ""
+}
+
 // Fonctions utilitaires
 func validateForm(form Form) error {
-	if form.Nom == "" || form.Prenom == "" || form.DateNaissance == "" || form.Sexe == "" {
-		return fmt.Errorf(ERR_MISSING_FIELDS)
-	}
-	if !nomRegex.MatchString(form.Nom) || len(form.Nom) > 32 {
+	if form.Nom != "" && (!nomRegex.MatchString(form.Nom) || len(form.Nom) > 32) {
 		return fmt.Errorf(ERR_NOM_INVALID)
 	}
-	if !nomRegex.MatchString(form.Prenom) || len(form.Prenom) > 32 {
+	if form.Prenom != "" && (!nomRegex.MatchString(form.Prenom) || len(form.Prenom) > 32) {
 		return fmt.Errorf(ERR_PRENOM_INVALID)
 	}
-	if !dateRegex.MatchString(form.DateNaissance) {
-		return fmt.Errorf(ERR_DATE_INVALID)
+	if form.DateNaissance != "" {
+		if !dateRegex.MatchString(form.DateNaissance) {
+			return fmt.Errorf(ERR_DATE_INVALID)
+		}
+		_, err := time.Parse(DATE_FORMAT, form.DateNaissance)
+		if err != nil {
+			return fmt.Errorf(ERR_DATE_INVALID)
+		}
 	}
-	_, err := time.Parse(DATE_FORMAT, form.DateNaissance)
-	if err != nil {
-		return fmt.Errorf(ERR_DATE_INVALID)
-	}
-	if !sexeRegex.MatchString(form.Sexe) {
+	if form.Sexe != "" && !sexeRegex.MatchString(form.Sexe) {
 		return fmt.Errorf(ERR_SEXE_INVALID)
 	}
 	return nil
