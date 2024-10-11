@@ -86,6 +86,12 @@ func init() {
 }
 
 // Gestionnaires HTTP
+func handleHome(w http.ResponseWriter, r *http.Request) {
+	if err := templates.ExecuteTemplate(w, "home", nil); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 func handlePromo(w http.ResponseWriter, r *http.Request) {
 	data := Promo{
 		Nom:     "B1 Informatique",
@@ -230,6 +236,7 @@ func setupRoutes() {
 	http.HandleFunc("/user/treatement", handleUserTreatment)
 	http.HandleFunc("/user/display", handleUserDisplay)
 	http.HandleFunc("/erreur", handleError)
+	http.HandleFunc("/home", handleHome)
 }
 
 type ErrorData struct {

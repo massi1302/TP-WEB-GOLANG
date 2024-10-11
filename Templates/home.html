@@ -1,0 +1,59 @@
+{{define "home"}}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Étudiants et Promotions</title>
+    <link rel="stylesheet" href="/assets/css/home.css">
+</head>
+<body>
+    <header>
+        <h1>Gestion des Étudiants et Promotions</h1>
+        <nav>
+            <ul>
+                <li><a href="/user/form">Inscription Étudiant</a></li>
+                <li><a href="/promo">Voir la Promotion</a></li>
+                <li><a href="/change">Compteur de Vues</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="features">
+            <h2>Nos Fonctionnalités</h2>
+            <div class="feature-cards">
+                <div class="card">
+                    <h3>Inscription Étudiant</h3>
+                    <p>Enregistrez facilement de nouveaux étudiants dans notre système.</p>
+                    <a href="/user/form" class="btn">S'inscrire</a>
+                </div>
+                <div class="card">
+                    <h3>Voir la Promotion</h3>
+                    <p>Consultez les détails de la promotion en cours.</p>
+                    <a href="/promo" class="btn">Voir la Promo</a>
+                </div>
+                <div class="card">
+                    <h3>Statistiques de Visite</h3>
+                    <p>Suivez le nombre de visites sur notre plateforme.</p>
+                    <a href="/change" class="btn">Voir les Stats</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="updates">
+            <h2>Dernières Mises à Jour</h2>
+            <ul>
+                <li>Nouvel étudiant inscrit : John Doe</li>
+                <li>Mise à jour de la promotion B1 Informatique</li>
+                <li>Nouveau record de visites : 1000 vues !</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Gestion des Étudiants et Promotions. Tous droits réservés.</p>
+    </footer>
+</body>
+</html>
+{{end}}
