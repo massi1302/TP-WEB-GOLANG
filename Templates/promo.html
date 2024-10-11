@@ -1,21 +1,23 @@
 {{define "promo"}}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/assets/css/promo.css">
     <title>{{.Nom}}</title>
+    <link rel="stylesheet" href="/assets/css/promo.css">
+</head>
 <body>
     <h1>{{.Nom}}</h1>
 
     <div class="info-section">
         <p><strong>Filière:</strong> {{.Filiere}}</p>
         <p><strong>Niveau:</strong> {{.Niveau}}</p>
-        <p><strong>Nombre d'étudiants:</strong> {{.Nombre}}</p>
+        <p><strong>Nombre d'étudiants:</strong> {{len .Etudiants}}</p>
     </div>
 
     <h2>Liste des étudiants</h2>
+
     <table>
         <thead>
             <tr>
@@ -28,20 +30,24 @@
         <tbody>
             {{range .Etudiants}}
             <tr>
-                <td>{{.Prenom}}</td>
                 <td>{{.Nom}}</td>
+                <td>{{.Prenom}}</td>
                 <td>{{.Age}}</td>
                 <td>
                     {{if eq .Sexe "M"}}
-                    <img class="icon" src="/assets/images/icon-M.png" alt="icon-M">
+                        <img src="/assets/images/icon-M.png" alt="Masculin" class="icon">
+                    {{else if eq .Sexe "F"}}
+                        <img src="/assets/images/icon-F.png" alt="Féminin" class="icon">
                     {{else}}
-                    <img class="icon" src="/assets/images/icon-F.png" alt="icon-F">
+                        <span>Autre</span>
                     {{end}}
                 </td>
             </tr>
             {{end}}
         </tbody>
     </table>
+
+    <a href="/home" class="back-button">Retour à l'accueil</a>
 </body>
 </html>
 {{end}}

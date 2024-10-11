@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"sync"
 	"time"
 )
 
@@ -64,10 +65,14 @@ type PageAffiche struct {
 }
 
 // Variables globales
+
 var (
 	stockageForm = Form{}
 	templates    *template.Template
 	viewCounter  int
+	recordViews  int
+	promo        Promo
+	mu           sync.Mutex
 )
 
 // Validateurs
@@ -83,17 +88,7 @@ func init() {
 	if err != nil {
 		log.Fatalf("Erreur lors du chargement des templates: %v", err)
 	}
-}
-
-// Gestionnaires HTTP
-func handleHome(w http.ResponseWriter, r *http.Request) {
-	if err := templates.ExecuteTemplate(w, "home", nil); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
-func handlePromo(w http.ResponseWriter, r *http.Request) {
-	data := Promo{
+	promo = Promo{
 		Nom:     "B1 Informatique",
 		Filiere: "Informatique",
 		Niveau:  "Bachelor 1",
@@ -111,6 +106,20 @@ func handlePromo(w http.ResponseWriter, r *http.Request) {
 			{Nom: "VELAZQUEZ", Prenom: "Léo", Age: 20, Sexe: "M"},
 		},
 	}
+}
+
+// Gestionnaires HTTP
+func handleHome(w http.ResponseWriter, r *http.Request) {
+	if err := templates.ExecuteTemplate(w, "home", nil); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func handlePromo(w http.ResponseWriter, r *http.Request) {
+
+	mu.Lock()
+	data := promo
+	mu.Unlock()
 
 	if err := templates.ExecuteTemplate(w, "promo", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -118,35 +127,56 @@ func handlePromo(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleCounter(w http.ResponseWriter, r *http.Request) {
-	var data ViewData
+	mu.Lock()
+	viewCounter++
+	if viewCounter > recordViews {
+		recordViews = viewCounter
+	}
+	count := viewCounter
+	record := recordViews
+	mu.Unlock()
 
-	switch {
-	case viewCounter == 0:
-		data = ViewData{
-			Message: fmt.Sprintf("Le compteur démarre : %d", viewCounter),
-			Class:   "even",
-		}
-	case viewCounter%2 == 0:
-		data = ViewData{
-			Message: fmt.Sprintf("Le nombre de vues est pair : %d", viewCounter),
-			Class:   "even",
-		}
-	default:
-		data = ViewData{
-			Message: fmt.Sprintf("Le nombre de vues est impair : %d", viewCounter),
-			Class:   "odd",
-		}
+	data := struct {
+		Count  int
+		Record int
+		Class  string
+	}{
+		Count:  count,
+		Record: record,
+		Class:  "odd",
+	}
+
+	if count%2 == 0 {
+		data.Class = "even"
 	}
 
 	if err := templates.ExecuteTemplate(w, "change", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
 	}
-	viewCounter++
+}
+
+func calculateAge(birthDate string) int {
+	t, err := time.Parse("2006-01-02", birthDate)
+	if err != nil {
+		return 0
+	}
+	now := time.Now()
+	age := now.Year() - t.Year()
+	if now.YearDay() < t.YearDay() {
+		age--
+	}
+	return age
 }
 
 func handleUserForm(w http.ResponseWriter, r *http.Request) {
-	if err := templates.ExecuteTemplate(w, "userform", nil); err != nil {
+	data := PageAffiche{
+		Check:         stockageForm.Check,
+		Nom:           stockageForm.Nom,
+		Prenom:        stockageForm.Prenom,
+		DateNaissance: stockageForm.DateNaissance,
+		Sexe:          stockageForm.Sexe,
+	}
+	if err := templates.ExecuteTemplate(w, "userform", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -164,16 +194,27 @@ func handleUserTreatment(w http.ResponseWriter, r *http.Request) {
 		Sexe:          r.FormValue("sexe"),
 	}
 
-	// Validate the form
 	if err := validateForm(form); err != nil {
-		// If there's an error, redirect to the error page
+
 		redirectError(w, r, "400", err.Error())
 		return
 	}
 
-	// If all validations pass, set Check to true and store the form
 	form.Check = true
 	stockageForm = form
+	age := calculateAge(form.DateNaissance)
+	newEtudiant := InfoEtudiants{
+		Nom:    form.Nom,
+		Prenom: form.Prenom,
+		Age:    age,
+		Sexe:   form.Sexe,
+	}
+
+	mu.Lock()
+	promo.Etudiants = append(promo.Etudiants, newEtudiant)
+	promo.Nombre = len(promo.Etudiants)
+	mu.Unlock()
+
 	http.Redirect(w, r, "/user/display", http.StatusSeeOther)
 }
 
@@ -250,7 +291,6 @@ func handleError(w http.ResponseWriter, r *http.Request) {
 		Message: r.FormValue("message"),
 	}
 
-	// Si pas de code ou message, utiliser des valeurs par défaut
 	if data.Code == "" {
 		data.Code = "500"
 	}
