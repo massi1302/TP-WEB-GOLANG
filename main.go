@@ -21,7 +21,6 @@ const (
 	ERR_DATE_INVALID   = "La date de naissance est invalide"
 	ERR_SEXE_INVALID   = "Le sexe doit être 'M', 'F' ou 'A'"
 	ERR_METHOD_INVALID = "Méthode non autorisée"
-	ERR_MISSING_FIELDS = "Tous les champs sont obligatoires"
 )
 
 // Structures de données
@@ -194,26 +193,56 @@ func handleUserTreatment(w http.ResponseWriter, r *http.Request) {
 		Sexe:          r.FormValue("sexe"),
 	}
 
+	// Validate the form
 	if err := validateForm(form); err != nil {
-
 		redirectError(w, r, "400", err.Error())
 		return
 	}
 
-	form.Check = true
-	stockageForm = form
-	age := calculateAge(form.DateNaissance)
-	newEtudiant := InfoEtudiants{
-		Nom:    form.Nom,
-		Prenom: form.Prenom,
-		Age:    age,
-		Sexe:   form.Sexe,
+	// Mettre à jour les informations avec les nouvelles valeurs
+	// Si un champ est vide, conserver l'ancienne valeur
+	if form.Nom != "" {
+		stockageForm.Nom = form.Nom
+	}
+	if form.Prenom != "" {
+		stockageForm.Prenom = form.Prenom
+	}
+	if form.DateNaissance != "" {
+		stockageForm.DateNaissance = form.DateNaissance
+	}
+	if form.Sexe != "" {
+		stockageForm.Sexe = form.Sexe
 	}
 
-	mu.Lock()
-	promo.Etudiants = append(promo.Etudiants, newEtudiant)
-	promo.Nombre = len(promo.Etudiants)
-	mu.Unlock()
+	// Mettre à jour le champ Check si toutes les informations sont remplies
+	stockageForm.Check = stockageForm.Nom != "" && stockageForm.Prenom != "" &&
+		stockageForm.DateNaissance != "" && stockageForm.Sexe != ""
+
+	// Mettre à jour la promo seulement si toutes les informations sont remplies
+	if stockageForm.Check {
+		age := calculateAge(stockageForm.DateNaissance)
+		newEtudiant := InfoEtudiants{
+			Nom:    stockageForm.Nom,
+			Prenom: stockageForm.Prenom,
+			Age:    age,
+			Sexe:   stockageForm.Sexe,
+		}
+
+		mu.Lock()
+		found := false
+		for i, etudiant := range promo.Etudiants {
+			if etudiant.Nom == stockageForm.Nom && etudiant.Prenom == stockageForm.Prenom {
+				promo.Etudiants[i] = newEtudiant
+				found = true
+				break
+			}
+		}
+		if !found {
+			promo.Etudiants = append(promo.Etudiants, newEtudiant)
+		}
+		promo.Nombre = len(promo.Etudiants)
+		mu.Unlock()
+	}
 
 	http.Redirect(w, r, "/user/display", http.StatusSeeOther)
 }
