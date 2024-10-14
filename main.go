@@ -199,8 +199,6 @@ func handleUserTreatment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Mettre à jour les informations avec les nouvelles valeurs
-	// Si un champ est vide, conserver l'ancienne valeur
 	if form.Nom != "" {
 		stockageForm.Nom = form.Nom
 	}
@@ -214,11 +212,9 @@ func handleUserTreatment(w http.ResponseWriter, r *http.Request) {
 		stockageForm.Sexe = form.Sexe
 	}
 
-	// Mettre à jour le champ Check si toutes les informations sont remplies
 	stockageForm.Check = stockageForm.Nom != "" && stockageForm.Prenom != "" &&
 		stockageForm.DateNaissance != "" && stockageForm.Sexe != ""
 
-	// Mettre à jour la promo seulement si toutes les informations sont remplies
 	if stockageForm.Check {
 		age := calculateAge(stockageForm.DateNaissance)
 		newEtudiant := InfoEtudiants{
